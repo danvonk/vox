@@ -38,18 +38,17 @@ opTable =
 opExpr :: Parser Expr
 opExpr = buildExpressionParser opTable term
 
-
 var :: Parser Expr
 var = CVar <$> identifier
 
-nil' :: Parser Expr
-nil' = Nil <$ reserved "nil"
+nil :: Parser Expr
+nil = Nil <$ reserved "nil"
 
-num' :: Parser Expr
-num' = CInt <$> integer
+num :: Parser Expr
+num = CInt <$> integer
 
-bool' :: Parser Expr
-bool' = CBool True <$ reserved "true"
+bool :: Parser Expr
+bool = CBool True <$ reserved "true"
   <|> CBool False <$ reserved "false"
 
 expr :: Parser Expr
@@ -57,14 +56,29 @@ expr = opExpr
   <|> term
 
 term :: Parser Expr
-term = num'
-  <|> nil'
-  <|> bool'
+term = num
+  <|> nil
+  <|> bool
   <|> var
   <|> parens expr
 
-parseString :: String -> Either ParseError Expr
-parseString = parse (expr <* eof) ""
+stmt :: Parser Stmt
+stmt = whiteSpace >> p <* eof
+  where
+    p :: Parser Stmt
+    p = Seq <$> semiSep1 stmt1
+    stmt1 = do { v <- identifier;
+                 reserved ":=";
+                 e <- expr;
+                 return (v := e)
+               }
+      <|> (reserved "if" *>
+          (If <$> expr <*> (reserved "then" *> stmt) <*> (reserved "else" *> stmt)))
+      <|> (reserved "while" *> (While <$> expr <*> (reserved "do" *> stmt)))
 
-parseFile :: FilePath -> IO (Either ParseError Expr)
-parseFile = parseFromFile (expr <* eof)
+
+parseString :: String -> Either ParseError Stmt
+parseString = parse (stmt <* eof) ""
+
+parseFile :: FilePath -> IO (Either ParseError Stmt)
+parseFile = parseFromFile (stmt <* eof)

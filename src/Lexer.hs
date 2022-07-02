@@ -13,6 +13,7 @@ module Lexer
     commaSep,
     integer,
     whiteSpace,
+    semiSep1,
     lexer,
   )
 where
@@ -22,8 +23,11 @@ import Text.Parsec
 import qualified Text.Parsec.Token as Token
 import Text.Parsec.Language
 
-names = words "true false nil if then else let var"
-opNames = words "! - == != / < <= > >= + - * / && ||"
+names :: [String]
+names = words "true false nil while do if then else let var print"
+
+opNames :: [String]
+opNames = words "! - == != / < <= > >= + - * / && || :="
 
 lexer = Token.makeTokenParser emptyDef
   {
@@ -46,3 +50,4 @@ brackets = Token.brackets lexer
 commaSep = Token.commaSep lexer
 integer = Token.integer lexer
 whiteSpace = Token.whiteSpace lexer
+semiSep1 = Token.semiSep1 lexer

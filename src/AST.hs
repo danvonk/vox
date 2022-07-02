@@ -2,7 +2,8 @@
 
 module AST
   (
-    Expr (..)
+    Expr (..),
+    Stmt (..)
   ) where
 
 data Expr
@@ -22,4 +23,12 @@ data Expr
   | LessEq Expr Expr
   | Great Expr Expr
   | GreatEq Expr Expr
+  deriving Show
+
+data Stmt
+  = String := Expr
+  | Var String Expr
+  | If Expr Stmt Stmt
+  | While Expr Stmt
+  | Seq [Stmt]
   deriving Show
