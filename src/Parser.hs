@@ -1,16 +1,17 @@
 -- |
 
-module Parser where
+module Parser
+  (
+    parseFile,
+    parseString
+  ) where
 
 import Text.Parsec
 import Text.Parsec.String
-import Text.Parsec.Language
 import Text.Parsec.Expr
-import qualified Text.Parsec.Token as Token
 
 import Lexer
 import AST
-
 
 binary  name label = Infix (do
                                reservedOp name
@@ -39,17 +40,17 @@ opExpr = buildExpressionParser opTable term
 
 
 var :: Parser Expr
-var = CVar <$> many1 alphaNum
+var = CVar <$> identifier
 
 nil' :: Parser Expr
-nil' = Nil <$ string "nil"
+nil' = Nil <$ reserved "nil"
 
 num' :: Parser Expr
-num' = CInt . read <$> many1 digit
+num' = CInt <$> integer
 
 bool' :: Parser Expr
-bool' = CBool True <$ string "true"
-  <|> CBool False <$ string "false"
+bool' = CBool True <$ reserved "true"
+  <|> CBool False <$ reserved "false"
 
 expr :: Parser Expr
 expr = opExpr
@@ -61,7 +62,6 @@ term = num'
   <|> bool'
   <|> var
   <|> parens expr
-
 
 parseString :: String -> Either ParseError Expr
 parseString = parse (expr <* eof) ""

@@ -4,9 +4,11 @@ import System.Environment
 import Text.Printf
 
 import Parser
-import AST
 
-run f = undefined
+run :: String -> IO ()
+run s = case parseString s of
+  Right a -> print a
+  Left _ -> putStrLn "Parse Error"
 
 report :: Int -> String -> String -> IO ()
 report = printf "[line %d] Error %s: %s"
@@ -15,9 +17,10 @@ err :: Int -> String -> IO ()
 err line = report line ""
 
 runFile :: String -> IO ()
-runFile path = do
-  f <- readFile path
-  run f
+runFile f = parseFile f >>= (\x -> case x of
+                                Right a -> print a
+                                Left _ -> putStrLn "Parse Error"
+                            )
 
 runPrompt :: IO ()
 runPrompt = do
@@ -25,7 +28,7 @@ runPrompt = do
   if null l
     then return ()
     else
-    putStrLn ">" >>
+    print (show ">") >>
     run l >>
     runPrompt
 

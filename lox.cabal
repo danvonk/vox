@@ -2,7 +2,7 @@ name:                lox
 version:             0.1.0.0
 -- synopsis:
 -- description:
-homepage:            https://github.com/githubuser/lox#readme
+homepage:            https://github.com/danvonk/lox#readme
 license:             GPLv3
 license-file:        LICENSE
 author:              Dan Vonk
@@ -18,4 +18,5 @@ executable lox
   main-is:             Main.hs
   default-language:    Haskell2010
   build-depends:       base >= 4.7 && < 5,
-                       parsec
+                       parsec,
+                       transformers

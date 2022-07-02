@@ -22,7 +22,7 @@ import Text.Parsec
 import qualified Text.Parsec.Token as Token
 import Text.Parsec.Language
 
-names = words "true false nil if then let var"
+names = words "true false nil if then else let var"
 opNames = words "! - == != / < <= > >= + - * / && ||"
 
 lexer = Token.makeTokenParser emptyDef
