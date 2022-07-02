@@ -28,7 +28,7 @@ runPrompt = do
   if null l
     then return ()
     else
-    print (show ">") >>
+    putStr "vox> " >>
     run l >>
     runPrompt
 
@@ -38,5 +38,4 @@ main = do
   case length as of
     0 -> runPrompt
     1 -> runFile (head as)
-    _ -> putStrLn "Usage: jlox [script]"
-
+    _ -> putStrLn "Usage: vox [script]"
