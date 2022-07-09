@@ -19,9 +19,8 @@ err line = report line ""
 runFile :: String -> IO ()
 runFile f = parseFile f >>= (\x -> case x of
                                 Right a -> print a
-                                Left _ -> putStrLn "Parse Error"
+                                Left _ -> putStrLn "Error parsing file."
                             )
-
 runPrompt :: IO ()
 runPrompt = do
   l <- getLine

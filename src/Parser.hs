@@ -75,6 +75,7 @@ stmt = whiteSpace >> p <* eof
       <|> (reserved "if" *>
           (If <$> expr <*> (reserved "then" *> stmt) <*> (reserved "else" *> stmt)))
       <|> (reserved "while" *> (While <$> expr <*> (reserved "do" *> stmt)))
+      <|> (reserved "print" *> (Print <$> expr))
 
 
 parseString :: String -> Either ParseError Stmt

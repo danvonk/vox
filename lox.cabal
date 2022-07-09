@@ -17,6 +17,13 @@ executable lox
   hs-source-dirs:      src
   main-is:             Main.hs
   default-language:    Haskell2010
+  other-modules:       AST,
+                       Lexer,
+                       Parser,
+                       Interpreter
   build-depends:       base >= 4.7 && < 5,
                        parsec,
-                       transformers
+                       mtl,
+                       transformers >= 0.4.2.0,
+                       transformers-base,
+                       containers
