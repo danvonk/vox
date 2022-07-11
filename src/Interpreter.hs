@@ -1,3 +1,4 @@
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 -- |
 
 module Interpreter where
@@ -12,9 +13,12 @@ import Control.Monad.IO.Class
 import Control.Monad
 import Control.Exception
 -- from mtl
-import Control.Monad.State
+import Control.Monad.State (MonadState, StateT, evalStateT)
+import qualified Control.Monad.State.Strict as State
 import Control.Monad.Error
 import Control.Monad.Cont
+
+import qualified Data.Sequence as Seq
 
 import AST
 import qualified Data.Map as Map
@@ -38,15 +42,20 @@ instance Eq Value where
   Num x == Num x' = x == x'
   _ == _ = False
 
+data RuntimeExcept
+  = Return Value
+  | RuntimeError String
+
 newtype Interpreter a = Interpreter
   {
     runInterpreter ::
-      ExceptT Exception
+      ExceptT RuntimeExcept
       (ContT
-       (Either Exception ())
+       (Either RuntimeExcept ())
        (StateT InterpreterState IO))
       a
-  } deriving
+  }
+  deriving
   (
     Functor,
     Applicative,
@@ -54,15 +63,11 @@ newtype Interpreter a = Interpreter
     MonadIO,
     MonadBase IO,
     MonadState InterpreterState,
-    MonadError Exception,
+    MonadError RuntimeExcept,
     MonadCont
   )
 
-type Env = Map.Map Identifier (IORef Expr)
-
-
-eval :: Expr -> Interpreter Value
-eval = undefined
+type Env = Map.Map Identifier (IORef Value)
 
 
 data InterpreterState = InterpreterState
@@ -70,5 +75,26 @@ data InterpreterState = InterpreterState
     isEnv :: Env
   }
 
-initInterpreterState :: IO InterpreterState
-initInterpreterState = InterpreterState <$> builtinEnv
+-- initInterpreterState :: IO InterpreterState
+initInterpreterState = InterpreterState <$> preludeEnv <*> newIORef Seq.empty
+
+preludeEnv :: Env
+preludeEnv = Map.empty
+
+defineVar :: Identifier -> Value -> Interpreter ()
+defineVar name val = do
+  env <- State.gets isEnv
+  env' <- defineVarEnv name val env
+  setEnv env'
+
+defineVarEnv :: Identifier -> Value -> Env -> Interpreter Env
+defineVarEnv name val env = do
+  valueRef <- newIORef val
+  return $ Map.insert name valueRef env
+
+setEnv :: Env -> Interpreter ()
+setEnv env = State.modify' $ \is -> is {isEnv = env}
+
+-- main eval function
+eval :: Expr -> Interpreter Value
+eval = undefined
