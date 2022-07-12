@@ -24,7 +24,6 @@ import AST
 import qualified Data.Map as Map
 import Data.IORef
 
-
 -- represents runtime values that vox variables can hold
 data Value
   = Null
@@ -32,6 +31,16 @@ data Value
   | VStr String
   | Num Integer
   | Function Identifier [Identifier] [Stmt] Env
+  | BuiltinFunction Identifier Int ([Expr] -> Interpreter Value)
+
+instance Show Value where
+  show = \v -> case v of
+    Null -> "Null"
+    VBool b -> show b
+    VStr s -> s
+    Num n -> show n
+    Function name  _ _ _ -> "function " <> name
+    BuiltinFunction name _ _ -> "function " <> name
 
 type Identifier = String
 
@@ -69,17 +78,18 @@ newtype Interpreter a = Interpreter
 
 type Env = Map.Map Identifier (IORef Value)
 
-
 data InterpreterState = InterpreterState
   {
     isEnv :: Env
   }
 
--- initInterpreterState :: IO InterpreterState
-initInterpreterState = InterpreterState <$> preludeEnv <*> newIORef Seq.empty
+initInterpreterState :: IO InterpreterState
+initInterpreterState = InterpreterState <$> builtinEnv
 
-preludeEnv :: Env
-preludeEnv = Map.empty
+builtinEnv :: IO Env
+builtinEnv = do
+  printFn <- newIORef $ BuiltinFunction "print" 1 executePrint
+  return $ Map.fromList [("print", printFn)]
 
 defineVar :: Identifier -> Value -> Interpreter ()
 defineVar name val = do
@@ -89,11 +99,24 @@ defineVar name val = do
 
 defineVarEnv :: Identifier -> Value -> Env -> Interpreter Env
 defineVarEnv name val env = do
-  valueRef <- newIORef val
+  valueRef <- liftIO (newIORef val)
   return $ Map.insert name valueRef env
+
+lookupVar :: Identifier -> Interpreter Value
+lookupVar = undefined
+
+assignVar :: Identifier -> Interpreter Value
+assignVar = undefined
+
+findValueRef :: Identifier -> Env -> Interpreter (IORef Value)
+findValueRef = undefined
 
 setEnv :: Env -> Interpreter ()
 setEnv env = State.modify' $ \is -> is {isEnv = env}
+
+executePrint :: [Expr] -> Interpreter Value
+executePrint argsEs =
+  eval (head argsEs) >>= liftIO . print >> return Null
 
 -- main eval function
 eval :: Expr -> Interpreter Value

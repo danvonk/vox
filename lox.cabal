@@ -3,7 +3,7 @@ version:             0.1.0.0
 -- synopsis:
 -- description:
 homepage:            https://github.com/danvonk/lox#readme
-license:             GPLv3
+license:             GPL-3
 license-file:        LICENSE
 author:              Dan Vonk
 maintainer:          dan@danvonk.com
@@ -26,4 +26,6 @@ executable lox
                        mtl,
                        transformers >= 0.4.2.0,
                        transformers-base,
-                       containers
+                       containers,
+                       pretty-simple,
+                       lifted-base
