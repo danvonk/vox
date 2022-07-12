@@ -11,7 +11,8 @@ import Control.Monad.Base
 
 import Control.Monad.IO.Class
 import Control.Monad
-import Control.Exception
+-- import Control.Exception
+
 -- from mtl
 import Control.Monad.State (MonadState, StateT, evalStateT)
 import qualified Control.Monad.State.Strict as State
@@ -103,13 +104,20 @@ defineVarEnv name val env = do
   return $ Map.insert name valueRef env
 
 lookupVar :: Identifier -> Interpreter Value
-lookupVar = undefined
+lookupVar name = State.gets isEnv >>= findValueRef name >>= liftIO . readIORef
 
-assignVar :: Identifier -> Interpreter Value
-assignVar = undefined
+assignVar :: Identifier -> Value -> Interpreter ()
+assignVar name value =
+  State.gets isEnv >>= findValueRef name >>= liftIO . flip writeIORef value
 
 findValueRef :: Identifier -> Env -> Interpreter (IORef Value)
-findValueRef = undefined
+findValueRef name env =
+  case Map.lookup name env of
+    Just ref -> return ref
+    Nothing -> throw $ "Unknown variable: " <> name
+
+throw :: String -> Interpreter a
+throw = throwError . RuntimeError
 
 setEnv :: Env -> Interpreter ()
 setEnv env = State.modify' $ \is -> is {isEnv = env}
@@ -120,4 +128,9 @@ executePrint argsEs =
 
 -- main eval function
 eval :: Expr -> Interpreter Value
-eval = undefined
+eval = \e -> case e of
+  Nil -> pure Null
+  CBool b -> pure $ VBool b
+  CVar s -> pure $ VStr s
+  CInt i -> pure $ Num i
+  Variable v -> lookupVar v

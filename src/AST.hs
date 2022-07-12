@@ -11,6 +11,7 @@ data Expr
   | CBool Bool
   | CVar String
   | Nil
+  | Variable String
   | Add Expr Expr
   | Sub Expr Expr
   | Mul Expr Expr
