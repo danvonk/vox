@@ -3,7 +3,9 @@
 module AST
   (
     Expr (..),
-    Stmt (..)
+    Stmt (..),
+    UnaryOp (..),
+    BinaryOp (..)
   ) where
 
 data Expr
@@ -12,18 +14,26 @@ data Expr
   | CVar String
   | Nil
   | Variable String
-  | Add Expr Expr
-  | Sub Expr Expr
-  | Mul Expr Expr
-  | Div Expr Expr
-  | And Expr Expr
-  | Or Expr Expr
-  | Not Expr
-  | Equal Expr Expr
-  | Less Expr Expr
-  | LessEq Expr Expr
-  | Great Expr Expr
-  | GreatEq Expr Expr
+  | UnOp UnaryOp Expr
+  | BinOp BinaryOp Expr Expr
+  deriving Show
+
+data UnaryOp
+   = Not
+   deriving Show
+
+data BinaryOp
+  = Add
+  | Sub
+  | Mul
+  | Div
+  | And
+  | Or
+  | Equal
+  | Less
+  | LessEq
+  | Great
+  | GreatEq
   deriving Show
 
 data Stmt

@@ -33,7 +33,7 @@ lexer = Token.makeTokenParser emptyDef
   {
     Token.commentStart = "/*",
     Token.commentEnd = "*/",
-    Token.commentLine = "#",
+    Token.commentLine = "//",
     Token.identStart = letter,
     Token.identLetter = alphaNum <|> char '_' <|> char '\'',
     Token.reservedNames = names,

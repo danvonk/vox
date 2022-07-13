@@ -10,13 +10,13 @@ import Control.Monad.Trans.Cont
 import Control.Monad.Base
 
 import Control.Monad.IO.Class
-import Control.Monad
+-- import Control.Monad
 -- import Control.Exception
 
 -- from mtl
 import Control.Monad.State (MonadState, StateT, evalStateT)
 import qualified Control.Monad.State.Strict as State
-import Control.Monad.Error
+import Control.Monad.Except
 import Control.Monad.Cont
 
 import qualified Data.Sequence as Seq

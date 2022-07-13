@@ -21,18 +21,19 @@ prefix  name label = Prefix (do{ reservedOp name; return label })
 postfix name label = Postfix (do{ reservedOp name; return label })
 
 opTable =
-        [[prefix "!" Not],
-         [binary "*" Mul AssocLeft,
-          binary "/" Div AssocLeft],
-         [binary "+" Add AssocLeft,
-          binary "-" Sub AssocLeft],
-         [binary "==" Equal AssocLeft,
-          binary "<" Less AssocLeft,
-          binary "<=" LessEq AssocLeft,
-          binary ">" Great AssocLeft,
-          binary ">=" GreatEq AssocLeft],
-         [binary "&&" And AssocLeft,
-          binary "||" Or AssocLeft]
+        [
+          [prefix "!" (UnOp Not)],
+         [binary "*"  (BinOp Mul) AssocLeft,
+          binary "/" (BinOp Div) AssocLeft],
+         [binary "+" (BinOp Add) AssocLeft,
+          binary "-" (BinOp Sub) AssocLeft],
+         [binary "==" (BinOp Equal) AssocLeft,
+          binary "<" (BinOp Less) AssocLeft,
+          binary "<=" (BinOp LessEq) AssocLeft,
+          binary ">" (BinOp Great) AssocLeft,
+          binary ">=" (BinOp GreatEq) AssocLeft],
+         [binary "&&" (BinOp And) AssocLeft,
+          binary "||" (BinOp Or) AssocLeft]
         ]
 
 opExpr :: Parser Expr
@@ -50,6 +51,7 @@ num = CInt <$> integer
 bool :: Parser Expr
 bool = CBool True <$ reserved "true"
   <|> CBool False <$ reserved "false"
+
 
 expr :: Parser Expr
 expr = opExpr
