@@ -20,6 +20,7 @@ import Control.Monad.Except
 import Control.Monad.Cont
 
 import qualified Data.Sequence as Seq
+import Data.Foldable (traverse_)
 
 import AST
 import qualified Data.Map as Map
@@ -134,3 +135,70 @@ eval = \e -> case e of
   CVar s -> pure $ VStr s
   CInt i -> pure $ Num i
   Variable v -> lookupVar v
+  bin@BinOp {} -> evalBinOp bin
+  uno@UnOp {} -> evalUnOp uno
+
+evalUnOp :: Expr -> Interpreter Value
+evalUnOp ~(UnOp o e) = do
+  operand <- eval e
+  let errMsg m = m <> ": " <> show operand
+  case (o, operand) of
+    (Not, VBool b) -> pure $ VBool (not b)
+    (Not, _) -> throw $ errMsg "can't negate value"
+
+evalBinOp :: Expr -> Interpreter Value
+evalBinOp ~(BinOp o e1 e2) = do
+  lhs <- eval e1
+  rhs <- eval e2
+  let errMsg m = m <> ": " <> show lhs <> " and " <> show rhs
+  case (o, lhs, rhs) of
+    -- Addition
+    (Add, Num n1, Num n2) -> pure $ Num (n1 + n2)
+    (Add, VStr s1, VStr s2) -> pure $ VStr (s1 <> s2)
+    (Add, VStr s1, _) -> pure $ VStr (s1 <> show rhs)
+    (Add, _, VStr s2) -> pure $ VStr (show lhs <> s2)
+    (Add, _, _) -> throw $ errMsg "Cannot add or append"
+    -- Subtraction
+    (Sub, Num n1, Num n2) -> pure $ Num (n1 - n2)
+    (Sub, _, _) -> throw $ errMsg "Cannot subtract non-numeric values"
+    -- Multiplication
+    (Mul, Num n1, Num n2) -> pure $ Num (n1 * n2)
+    (Mul, _, _) -> throw $ errMsg "Cannot multiply non-numeric values"
+    -- Division
+    (Div, Num n1, Num n2) -> pure $ Num (n1 `div` n2)
+    (Div, _, _) -> throw $ errMsg "Cannot divide non-numeric values"
+    -- Numeric Ordering Predicates
+    (Less, Num n1, Num n2) -> pure $ VBool (n1 < n2)
+    (Less, _, _) -> throw $ errMsg "Cannot compare non-numeric values"
+    (LessEq, Num n1, Num n2) -> pure $ VBool (n1 <= n2)
+    (LessEq, _, _) -> throw $ errMsg "Cannot compare non-numeric values"
+    (Great, Num n1, Num n2) -> pure $ VBool (n1 > n2)
+    (Great, _, _) -> throw $ errMsg "Cannot compare non-numeric values"
+    (GreatEq, Num n1, Num n2) -> pure $ VBool (n1 >= n2)
+    (GreatEq, _, _) -> throw $ errMsg "Cannot compare non-numeric values"
+    -- Propositional Logic Operators
+    (And, VBool b1, VBool b2) -> pure $ VBool (b1 && b2)
+    (And, _, _) -> throw $ errMsg "Cannot perform boolean operation on these values"
+    (Or, VBool b1, VBool b2) -> pure $ VBool (b1 || b2)
+    (Or, _, _) -> throw $ errMsg "Cannot perform boolean operation on these values"
+    -- Equality
+    (Equal, _, _) -> pure $ VBool (lhs == rhs)
+    (Neq, _, _) -> pure $ VBool (lhs /= rhs)
+
+
+evalFunCall :: Expr -> Interpreter Value
+evalFunCall = undefined
+
+
+execute :: Stmt -> Interpreter ()
+execute = \s -> case s of
+  Var name expr -> eval expr >>= assignVar name
+  If e s1 s2 -> do
+    cond <- eval e
+    when (isTruthy cond) $
+      traverse_ execute s1
+  where
+    isTruthy = \t -> case t of
+      Null -> False
+      VBool b -> b
+      _ -> True

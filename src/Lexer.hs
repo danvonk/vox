@@ -23,8 +23,14 @@ import Text.Parsec
 import qualified Text.Parsec.Token as Token
 import Text.Parsec.Language
 
+import Control.Monad.IO.Class (MonadIO)
+import Text.Pretty.Simple (CheckColorTty (..),
+                           OutputOptions (..),
+                           defaultOutputOptionsNoColor,
+                           pPrintOpt)
+
 names :: [String]
-names = words "true false nil while do if then else let var print"
+names = words "true false nil while do if then else let var print fun return"
 
 opNames :: [String]
 opNames = words "! - == != / < <= > >= + - * / && || :="
@@ -40,6 +46,14 @@ lexer = Token.makeTokenParser emptyDef
     Token.reservedOpNames = opNames
   }
 
+pPrint :: (MonadIO m, Show a) => a -> m ()
+pPrint = pPrintOpt CheckColorTty $
+  defaultOutputOptionsNoColor
+  {
+    outputOptionsIndentAmount = 2,
+    outputOptionsCompact = True,
+    outputOptionsCompactParens = True
+  }
 
 identifier = Token.identifier lexer
 symbol = Token.symbol lexer

@@ -16,6 +16,7 @@ data Expr
   | Variable String
   | UnOp UnaryOp Expr
   | BinOp BinaryOp Expr Expr
+  | FunCall String [Expr]
   deriving Show
 
 data UnaryOp
@@ -30,6 +31,7 @@ data BinaryOp
   | And
   | Or
   | Equal
+  | Neq
   | Less
   | LessEq
   | Great
@@ -37,11 +39,12 @@ data BinaryOp
   deriving Show
 
 data Stmt
-  = String := Expr
-  | Var String Expr
+  = Var String Expr
   | If Expr Stmt Stmt
   | While Expr Stmt
   | Print Expr
+  | Return (Maybe Expr)
+  | FunStmt String [String] [Stmt]
   | Seq [Stmt]
   deriving Show
 

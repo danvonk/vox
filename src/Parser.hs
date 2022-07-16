@@ -28,6 +28,7 @@ opTable =
          [binary "+" (BinOp Add) AssocLeft,
           binary "-" (BinOp Sub) AssocLeft],
          [binary "==" (BinOp Equal) AssocLeft,
+          binary "!=" (BinOp Neq) AssocLeft,
           binary "<" (BinOp Less) AssocLeft,
           binary "<=" (BinOp LessEq) AssocLeft,
           binary ">" (BinOp Great) AssocLeft,
@@ -62,22 +63,32 @@ term = num
   <|> nil
   <|> bool
   <|> var
+  <|> try (FunCall <$> identifier <*> parens (sepBy expr (char ',' *> whiteSpace)))
   <|> parens expr
+
+funStmt :: Parser Stmt
+funStmt = reserved "fun" *> (FunStmt
+                             <$> identifier
+                             <*> (sepBy identifier (char ',' *> whiteSpace))
+                             <*> brackets (many stmt))
 
 stmt :: Parser Stmt
 stmt = whiteSpace >> p <* eof
   where
     p :: Parser Stmt
     p = Seq <$> semiSep1 stmt1
-    stmt1 = do { v <- identifier;
+    stmt1
+      = do { v <- identifier;
                  reserved ":=";
                  e <- expr;
-                 return (v := e)
-               }
+                 return (Var v e)
+           }
       <|> (reserved "if" *>
           (If <$> expr <*> (reserved "then" *> stmt) <*> (reserved "else" *> stmt)))
       <|> (reserved "while" *> (While <$> expr <*> (reserved "do" *> stmt)))
       <|> (reserved "print" *> (Print <$> expr))
+      <|> (reserved "return" *> (Return <$> (optionMaybe expr)))
+      <|> funStmt
 
 
 parseString :: String -> Either ParseError Stmt
