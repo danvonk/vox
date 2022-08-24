@@ -69,7 +69,7 @@ term = num
 funStmt :: Parser Stmt
 funStmt = reserved "fun" *> (FunStmt
                              <$> identifier
-                             <*> (sepBy identifier (char ',' *> whiteSpace))
+                             <*> sepBy identifier (char ',' *> whiteSpace)
                              <*> brackets (many stmt))
 
 stmt :: Parser Stmt
@@ -87,7 +87,7 @@ stmt = whiteSpace >> p <* eof
           (If <$> expr <*> (reserved "then" *> stmt) <*> (reserved "else" *> stmt)))
       <|> (reserved "while" *> (While <$> expr <*> (reserved "do" *> stmt)))
       <|> (reserved "print" *> (Print <$> expr))
-      <|> (reserved "return" *> (Return <$> (optionMaybe expr)))
+      <|> (reserved "return" *> (Return <$> optionMaybe expr))
       <|> funStmt
 
 

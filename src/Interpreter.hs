@@ -1,4 +1,5 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE LambdaCase #-}
 -- |
 
 module Interpreter where
@@ -25,6 +26,7 @@ import Data.Foldable (traverse_)
 import AST
 import qualified Data.Map as Map
 import Data.IORef
+import Data.Maybe (fromMaybe)
 
 -- represents runtime values that vox variables can hold
 data Value
@@ -36,7 +38,7 @@ data Value
   | BuiltinFunction Identifier Int ([Expr] -> Interpreter Value)
 
 instance Show Value where
-  show = \v -> case v of
+  show v = case v of
     Null -> "Null"
     VBool b -> show b
     VStr s -> s
@@ -80,7 +82,7 @@ newtype Interpreter a = Interpreter
 
 type Env = Map.Map Identifier (IORef Value)
 
-data InterpreterState = InterpreterState
+newtype InterpreterState = InterpreterState
   {
     isEnv :: Env
   }
@@ -129,7 +131,7 @@ executePrint argsEs =
 
 -- main eval function
 eval :: Expr -> Interpreter Value
-eval = \e -> case e of
+eval e = case e of
   Nil -> pure Null
   CBool b -> pure $ VBool b
   CVar s -> pure $ VStr s
@@ -137,6 +139,7 @@ eval = \e -> case e of
   Variable v -> lookupVar v
   bin@BinOp {} -> evalBinOp bin
   uno@UnOp {} -> evalUnOp uno
+  func@FunCall {} -> evalFunCall func
 
 evalUnOp :: Expr -> Interpreter Value
 evalUnOp ~(UnOp o e) = do
@@ -189,16 +192,26 @@ evalBinOp ~(BinOp o e1 e2) = do
 evalFunCall :: Expr -> Interpreter Value
 evalFunCall = undefined
 
-
 execute :: Stmt -> Interpreter ()
-execute = \s -> case s of
-  Var name expr -> eval expr >>= assignVar name
+execute = \case
+  Var name expr -> eval expr >>= defineVar name
   If e s1 s2 -> do
     cond <- eval e
     when (isTruthy cond) $
       traverse_ execute s1
+  while@(While expr body) -> do
+    cond <- eval expr
+    when (isTruthy cond) $ do
+      traverse_ execute body
+      execute while
+  ReturnStmt maybeExpr -> do
+    maybeRet <- traverse eval maybeExpr
+    throwError . Return . fromMaybe Null $ maybeRet
+  FunStmt name params body -> do
+    env <- State.gets isEnv
+    defineVar name $ Function name params body env
   where
-    isTruthy = \t -> case t of
+    isTruthy t = case t of
       Null -> False
       VBool b -> b
       _ -> True

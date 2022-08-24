@@ -40,16 +40,11 @@ data BinaryOp
 
 data Stmt
   = Var String Expr
-  | If Expr Stmt Stmt
-  | While Expr Stmt
-  | Print Expr
-  | Return (Maybe Expr)
+  | If Expr [Stmt] [Stmt]
+  | While Expr [Stmt]
+  -- | PrintStmt Expr
+  | ReturnStmt (Maybe Expr)
   | FunStmt String [String] [Stmt]
-  | Seq [Stmt]
   deriving Show
 
--- instance Eq Expr where
---   CInt x == CInt y = x == y
---   CBool a == CBool b = a == b
---   CVar s == CVar t = s == t
---   Nil == Nil = True
+type Program = [Stmt]
